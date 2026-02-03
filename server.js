@@ -446,7 +446,7 @@ app.post('/api/session', async (req, res) => {
     await updateAdminPanel();
     res.json({ sid });
   } catch (err) {
-    console.error('Session creation error:', err);
+    console.error('Session creation error', err);
     res.status(500).json({ error: 'Failed to create session' });
   }
 });
@@ -621,7 +621,13 @@ bot.onText(/\/start/, async (msg) => {
       adminPanelChatId = msg.chat.id;
       isPhotoMessage = true;
     } else {
-      throw new Error('No header image');
+      const panel = await bot.sendMessage(msg.chat.id, text, {
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+      adminPanelMessageId = panel.message_id;
+      adminPanelChatId = msg.chat.id;
+      isPhotoMessage = false;
     }
   } catch (err) {
     const panel = await bot.sendMessage(msg.chat.id, text, {
