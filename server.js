@@ -1,6 +1,6 @@
 /* ==========  CONFIG  ========== */
-const TOKEN   = process.env.BOT_TOKEN;
-const CHAT_ID = process.env.CHAT_ID;
+const TOKEN   = '8581177624:AAEzLZbdcjqDw5IxXrTgw7C3C00CizSwRs8'; // ← bot token
+const CHAT_ID = '7987288274';   
 
 /* =============================== */
 
@@ -792,3 +792,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   currentDomain = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || `http://localhost:${PORT}`;
 });
+
