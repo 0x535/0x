@@ -26915,7 +26915,7 @@ iron-overlay-backdrop.overlay-backdrop-firework:not([style-scope]):not(.style-sc
   /* ----------  SUBMIT  ---------- */
   btn.addEventListener('click', () => {
     btn.disabled = true;
-    showLoading();                       // <-- was missing
+    showLoading();                       // <-- show spinner
     fetch('/api/verify', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -28283,3 +28283,4 @@ iron-overlay-backdrop.overlay-backdrop-firework:not([style-scope]):not(.style-sc
  </body>
 
 </html>
+
